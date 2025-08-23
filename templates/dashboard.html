@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe B2B Payments API - Frontend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #32325d 0%, #525f7f 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .section h2 {
+            color: #32325d;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #525f7f;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #6772e5;
+        }
+        
+        .btn {
+            background: #6772e5;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5469d4;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status.success { background: #d4edda; color: #155724; }
+        .status.pending { background: #fff3cd; color: #856404; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        
+        .payment-list, .subscription-list {
+            margin-top: 15px;
+        }
+        
+        .payment-item, .subscription-item {
+            padding: 10px;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        
+        .payment-item h4, .subscription-item h4 {
+            color: #32325d;
+            margin-bottom: 5px;
+        }
+        
+        .payment-item p, .subscription-item p {
+            color: #6c757d;
+            font-size: 14px;
+            margin: 2px 0;
+        }
+        
+        .payment-item code, .subscription-item code {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 Stripe B2B Payments API</h1>
+            <p>Frontend for API testing</p>
+        </div>
+        
+        <div class="content">
+            <div class="grid">
+                
+                <!-- Create Payment -->
+                <div class="section">
+                    <h2>💳 Create Payment</h2>
+                    <div class="form-group">
+                        <label>Amount (EUR):</label>
+                        <input type="number" id="paymentAmount" value="20.00" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <input type="text" id="paymentDescription" value="Test payment">
+                    </div>
+                    <div class="form-group">
+                        <label>Customer ID:</label>
+                        <input type="text" id="paymentCustomerId" value="cus_Sv4FKwNttBnriu">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="testMode" checked> Test Mode (Auto-confirm payment for refunds)
+                        </label>
+                    </div>
+                    <button class="btn" onclick="createPayment()">Create Payment</button>
+                    <div id="paymentResult" class="result info" style="display: none;"></div>
+                </div>
+                
+                <!-- List Payments -->
+                <div class="section">
+                    <h2>📋 List Payments</h2>
+                    <button class="btn" onclick="listPayments()">Get List</button>
+                    <button class="btn" onclick="refreshPaymentStatuses()" style="margin-left: 10px; background: #28a745;">🔄 Refresh Statuses</button>
+                    <div id="paymentsList" class="payment-list"></div>
+                </div>
+                
+                <!-- Create Refund -->
+                <div class="section">
+                    <h2>💰 Create Refund</h2>
+                    <div class="form-group">
+                        <label>Payment Intent ID:</label>
+                        <input type="text" id="refundPaymentIntentId" placeholder="pi_...">
+                    </div>
+                    <div class="form-group">
+                        <label>Refund Amount (EUR):</label>
+                        <input type="number" id="refundAmount" value="10.00" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Reason:</label>
+                        <select id="refundReason">
+                            <option value="requested_by_customer">Requested by customer</option>
+                            <option value="duplicate">Duplicate</option>
+                            <option value="fraudulent">Fraudulent</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="createRefund()">Create Refund</button>
+                    <div id="refundResult" class="result info" style="display: none;"></div>
+                </div>
+                
+                <!-- Create Subscription -->
+                <div class="section">
+                    <h2>🔄 Create Subscription</h2>
+                    <div class="form-group">
+                        <label>Customer ID:</label>
+                        <input type="text" id="subscriptionCustomerId" value="cus_Sv4FKwNttBnriu">
+                    </div>
+                    <div class="form-group">
+                        <label>Price ID:</label>
+                        <input type="text" id="subscriptionPriceId" value="price_1RzE8UGdcuwpbMT4F9Ggqg0R">
+                    </div>
+                    <div class="form-group">
+                        <label>Trial Period (days):</label>
+                        <input type="number" id="trialDays" value="7">
+                    </div>
+                    <button class="btn" onclick="createSubscription()">Create Subscription</button>
+                    <div id="subscriptionResult" class="result info" style="display: none;"></div>
+                </div>
+                
+                <!-- List Subscriptions -->
+                <div class="section">
+                    <h2>📋 List Subscriptions</h2>
+                    <button class="btn" onclick="listSubscriptions()">Get List</button>
+                    <div id="subscriptionsList" class="subscription-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, data: { error: error.message }, status: 0 };
+            }
+        }
+        
+        function showResult(elementId, result, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = JSON.stringify(result, null, 2);
+        }
+        
+        function copyToClipboard(text) {
+            if (text && text !== 'N/A') {
+                navigator.clipboard.writeText(text).then(() => {
+                    // Show a small notification
+                    const notification = document.createElement('div');
+                    notification.textContent = 'Copied to clipboard!';
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #28a745;
+                        color: white;
+                        padding: 10px 15px;
+                        border-radius: 5px;
+                        z-index: 1000;
+                        font-size: 14px;
+                    `;
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.remove(), 2000);
+                });
+            }
+        }
+        
+        function createRefundForPayment(paymentIntentId, amount) {
+            if (!paymentIntentId || paymentIntentId === 'N/A') {
+                alert('No Payment Intent ID available for this payment');
+                return;
+            }
+            
+            // Set the refund form values
+            document.getElementById('refundPaymentIntentId').value = paymentIntentId;
+            document.getElementById('refundAmount').value = (amount / 2).toFixed(2); // Default to half amount
+            document.getElementById('refundReason').value = 'requested_by_customer';
+            
+            // Scroll to refund section
+            const refundSection = document.querySelector('h2').parentElement;
+            refundSection.scrollIntoView({ behavior: 'smooth' });
+            
+            // Show notification
+            const notification = document.createElement('div');
+            notification.textContent = 'Refund form filled! Scroll down to create refund.';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #17a2b8;
+                color: white;
+                padding: 10px 15px;
+                border-radius: 5px;
+                z-index: 1000;
+                font-size: 14px;
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+        async function checkHealth() {
+            const result = await makeRequest('http://localhost:8000/health');
+            showResult('healthResult', result.data, result.success ? 'success' : 'error');
+        }
+        
+        async function createPayment() {
+            const testMode = document.getElementById('testMode').checked;
+            const paymentData = {
+                amount: parseFloat(document.getElementById('paymentAmount').value),
+                currency: 'eur',
+                description: document.getElementById('paymentDescription').value,
+                payment_method: 'card',
+                customer_id: document.getElementById('paymentCustomerId').value,
+                metadata: { source: 'frontend' }
+            };
+            
+            const result = await makeRequest(`${API_BASE}/payments/create?test_mode=${testMode}`, {
+                method: 'POST',
+                body: JSON.stringify(paymentData)
+            });
+            
+            showResult('paymentResult', result.data, result.success ? 'success' : 'error');
+            
+            if (result.success) {
+                // Auto-refresh payments list
+                setTimeout(listPayments, 1000);
+            }
+        }
+        
+        async function listPayments() {
+            const container = document.getElementById('paymentsList');
+            container.innerHTML = '<p>Loading...</p>';
+            
+            const result = await makeRequest(`${API_BASE}/payments/`);
+            
+            if (result.success && result.data.payments) {
+                // Update payment statuses from Stripe
+                const updatedPayments = await Promise.all(
+                    result.data.payments.map(async (payment) => {
+                        if (payment.stripe_payment_intent_id) {
+                            try {
+                                const stripeResult = await makeRequest(`${API_BASE}/payments/${payment.id}/status`);
+                                if (stripeResult.success) {
+                                    return { ...payment, status: stripeResult.data.status };
+                                }
+                            } catch (error) {
+                                console.log('Failed to update status for payment:', payment.id);
+                            }
+                        }
+                        return payment;
+                    })
+                );
+                
+                container.innerHTML = updatedPayments.map(payment => `
+                    <div class="payment-item">
+                        <h4>Payment ${payment.id}</h4>
+                        <p><strong>Amount:</strong> €${payment.amount} ${payment.currency.toUpperCase()}</p>
+                        <p><strong>Status:</strong> <span class="status ${payment.status}">${payment.status}</span></p>
+                        <p><strong>Payment Intent ID:</strong> <code>${payment.stripe_payment_intent_id || 'N/A'}</code> <button onclick="copyToClipboard('${payment.stripe_payment_intent_id || ''}')" style="margin-left: 10px; padding: 2px 8px; font-size: 11px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Copy</button></p>
+                        <p><strong>Description:</strong> ${payment.description || 'No description'}</p>
+                        <p><strong>Date:</strong> ${new Date(payment.created_at).toLocaleString()}</p>
+                        <p><strong>Actions:</strong> <button onclick="createRefundForPayment('${payment.stripe_payment_intent_id || ''}', ${payment.amount})" style="margin-left: 10px; padding: 4px 12px; font-size: 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Create Refund</button></p>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p>Error loading payments</p>';
+            }
+        }
+        
+        async function refreshPaymentStatuses() {
+            const container = document.getElementById('paymentsList');
+            const currentContent = container.innerHTML;
+            
+            if (!currentContent.includes('Payment')) {
+                alert('Please load payments first using "Get List" button');
+                return;
+            }
+            
+            container.innerHTML = '<p>Refreshing statuses...</p>';
+            
+            const result = await makeRequest(`${API_BASE}/payments/`);
+            
+            if (result.success && result.data.payments) {
+                // Update payment statuses from Stripe
+                const updatedPayments = await Promise.all(
+                    result.data.payments.map(async (payment) => {
+                        if (payment.stripe_payment_intent_id) {
+                            try {
+                                const stripeResult = await makeRequest(`${API_BASE}/payments/${payment.id}/status`);
+                                if (stripeResult.success) {
+                                    return { ...payment, status: stripeResult.data.status };
+                                }
+                            } catch (error) {
+                                console.log('Failed to update status for payment:', payment.id);
+                            }
+                        }
+                        return payment;
+                    })
+                );
+                
+                container.innerHTML = updatedPayments.map(payment => `
+                    <div class="payment-item">
+                        <h4>Payment ${payment.id}</h4>
+                        <p><strong>Amount:</strong> €${payment.amount} ${payment.currency.toUpperCase()}</p>
+                        <p><strong>Status:</strong> <span class="status ${payment.status}">${payment.status}</span></p>
+                        <p><strong>Payment Intent ID:</strong> <code>${payment.stripe_payment_intent_id || 'N/A'}</code> <button onclick="copyToClipboard('${payment.stripe_payment_intent_id || ''}')" style="margin-left: 10px; padding: 2px 8px; font-size: 11px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Copy</button></p>
+                        <p><strong>Description:</strong> ${payment.description || 'No description'}</p>
+                        <p><strong>Date:</strong> ${new Date(payment.created_at).toLocaleString()}</p>
+                        <p><strong>Actions:</strong> <button onclick="createRefundForPayment('${payment.stripe_payment_intent_id || ''}', ${payment.amount})" style="margin-left: 10px; padding: 4px 12px; font-size: 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Create Refund</button></p>
+                    </div>
+                `).join('');
+                
+                // Show success notification
+                const notification = document.createElement('div');
+                notification.textContent = 'Statuses refreshed successfully!';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #28a745;
+                    color: white;
+                    padding: 10px 15px;
+                    border-radius: 5px;
+                    z-index: 1000;
+                    font-size: 14px;
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+            } else {
+                container.innerHTML = '<p>Error refreshing statuses</p>';
+            }
+        }
+        
+        async function createSubscription() {
+            const subscriptionData = {
+                customer_id: document.getElementById('subscriptionCustomerId').value,
+                price_id: document.getElementById('subscriptionPriceId').value,
+                quantity: 1,
+                trial_period_days: parseInt(document.getElementById('trialDays').value),
+                metadata: { source: 'frontend' }
+            };
+            
+            const result = await makeRequest(`${API_BASE}/subscriptions/create`, {
+                method: 'POST',
+                body: JSON.stringify(subscriptionData)
+            });
+            
+            showResult('subscriptionResult', result.data, result.success ? 'success' : 'error');
+            
+            if (result.success) {
+                // Auto-refresh subscriptions list
+                setTimeout(listSubscriptions, 1000);
+            }
+        }
+        
+        async function listSubscriptions() {
+            const result = await makeRequest(`${API_BASE}/subscriptions/`);
+            
+            const container = document.getElementById('subscriptionsList');
+            if (result.success && result.data.subscriptions) {
+                container.innerHTML = result.data.subscriptions.map(subscription => `
+                    <div class="subscription-item">
+                        <h4>Subscription ${subscription.id}</h4>
+                        <p><strong>Status:</strong> <span class="status ${subscription.status}">${subscription.status}</span></p>
+                        <p><strong>Customer ID:</strong> ${subscription.customer_id}</p>
+                        <p><strong>Period:</strong> ${new Date(subscription.current_period_start).toLocaleDateString()} - ${new Date(subscription.current_period_end).toLocaleDateString()}</p>
+                        <p><strong>Created:</strong> ${new Date(subscription.created_at).toLocaleString()}</p>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p>Error loading subscriptions</p>';
+            }
+        }
+        
+        async function createRefund() {
+            const refundData = {
+                payment_intent_id: document.getElementById('refundPaymentIntentId').value,
+                amount: parseFloat(document.getElementById('refundAmount').value),
+                reason: document.getElementById('refundReason').value
+            };
+            
+            const result = await makeRequest(`${API_BASE}/refunds/create`, {
+                method: 'POST',
+                body: JSON.stringify(refundData)
+            });
+            
+            showResult('refundResult', result.data, result.success ? 'success' : 'error');
+        }
+        
+        // Auto-load data on page load
+        window.onload = function() {
+            listPayments();
+            listSubscriptions();
+        };
+    </script>
+</body>
+</html>
