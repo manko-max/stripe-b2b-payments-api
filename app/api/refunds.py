@@ -1,20 +1,16 @@
 """
 Refund-related API routes.
 """
-from decimal import Decimal
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.models.refund import RefundCreateRequest, RefundResponse, RefundListResponse
+from app.models.refund import RefundCreateRequest, RefundListResponse
 from app.dependencies import get_refund_service
 from app.services.refund_service import RefundService
 from app.constants import ErrorMessages, SuccessMessages, DEFAULT_PAGE_SIZE
 
 router = APIRouter(prefix="/refunds", tags=["Refunds"])
-
-
-
 
 
 @router.post(
@@ -27,8 +23,8 @@ router = APIRouter(prefix="/refunds", tags=["Refunds"])
     }
 )
 async def create_refund(
-    request: RefundCreateRequest,
-    refund_service: RefundService = Depends(get_refund_service)
+        request: RefundCreateRequest,
+        refund_service: RefundService = Depends(get_refund_service)
 ) -> dict:
     """
     Create a refund for a payment.
@@ -53,23 +49,23 @@ async def create_refund(
             amount=request.amount,
             reason=request.reason
         )
-        
+
         return {
             "message": SuccessMessages.REFUND_CREATED,
             "refund": refund
         }
-        
+
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"{ErrorMessages.FAILED_TO_CREATE_REFUND}: {str(e)}"
         )
 
 
 @router.get("/{refund_id}")
 async def get_refund(
-    refund_id: str,
-    refund_service: RefundService = Depends(get_refund_service)
+        refund_id: str,
+        refund_service: RefundService = Depends(get_refund_service)
 ):
     """
     Get refund details by ID.
@@ -85,9 +81,9 @@ async def get_refund(
         refund = refund_service.get_refund(refund_id)
         if not refund:
             raise HTTPException(status_code=404, detail="Refund not found")
-        
+
         return refund
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -96,9 +92,9 @@ async def get_refund(
 
 @router.get("/")
 async def list_refunds(
-    payment_intent_id: Optional[str] = Query(None, description="Filter by payment intent ID"),
-    limit: int = Query(DEFAULT_PAGE_SIZE, le=100, description="Maximum number of refunds to return"),
-    refund_service: RefundService = Depends(get_refund_service)
+        payment_intent_id: Optional[str] = Query(None, description="Filter by payment intent ID"),
+        limit: int = Query(DEFAULT_PAGE_SIZE, le=100, description="Maximum number of refunds to return"),
+        refund_service: RefundService = Depends(get_refund_service)
 ):
     """
     List refunds.
@@ -116,12 +112,12 @@ async def list_refunds(
             payment_intent_id=payment_intent_id,
             limit=limit
         )
-        
+
         return RefundListResponse(
             refunds=refunds,
             total=len(refunds),
             has_more=False  # For simplicity, always return False
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list refunds: {str(e)}")

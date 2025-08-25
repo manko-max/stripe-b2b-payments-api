@@ -3,7 +3,7 @@ Payment-related API routes.
 """
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.models.payment import PaymentCreateRequest, PaymentListResponse
 from app.dependencies import get_payment_service, get_stripe_service
@@ -24,9 +24,9 @@ router = APIRouter(prefix="/payments", tags=["Payments"])
     }
 )
 async def create_payment(
-    request: PaymentCreateRequest,
-    test_mode: bool = Query(False, description="Create a test payment that will be automatically successful"),
-    payment_service: PaymentService = Depends(get_payment_service)
+        request: PaymentCreateRequest,
+        test_mode: bool = Query(False, description="Create a test payment that will be automatically successful"),
+        payment_service: PaymentService = Depends(get_payment_service)
 ) -> dict:
     """
     Create a new payment.
@@ -47,16 +47,16 @@ async def create_payment(
     """
     try:
         payment = payment_service.create_payment(request, test_mode=test_mode)
-        
+
         return {
             "message": SuccessMessages.PAYMENT_CREATED,
             "payment": payment,
             "client_secret": payment.stripe_payment_intent_id
         }
-        
+
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"{ErrorMessages.FAILED_TO_CREATE_PAYMENT}: {str(e)}"
         )
 
@@ -71,8 +71,8 @@ async def create_payment(
     }
 )
 async def get_payment(
-    payment_id: str,
-    payment_service: PaymentService = Depends(get_payment_service)
+        payment_id: str,
+        payment_service: PaymentService = Depends(get_payment_service)
 ) -> dict:
     """
     Get payment details by ID.
@@ -91,13 +91,13 @@ async def get_payment(
         HTTPException: If payment is not found
     """
     payment = payment_service.get_payment(payment_id)
-    
+
     if not payment:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=ErrorMessages.PAYMENT_NOT_FOUND
         )
-    
+
     return payment
 
 
@@ -113,9 +113,9 @@ async def get_payment(
     }
 )
 async def get_payment_status(
-    payment_id: str,
-    payment_service: PaymentService = Depends(get_payment_service),
-    stripe_service: StripeService = Depends(get_stripe_service)
+        payment_id: str,
+        payment_service: PaymentService = Depends(get_payment_service),
+        stripe_service: StripeService = Depends(get_stripe_service)
 ) -> dict:
     """
     Get payment status from Stripe.
@@ -136,32 +136,32 @@ async def get_payment_status(
     """
     try:
         payment = payment_service.get_payment(payment_id)
-        
+
         if not payment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail=ErrorMessages.PAYMENT_NOT_FOUND
             )
-        
+
         if not payment.stripe_payment_intent_id:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ErrorMessages.INVALID_PAYMENT_INTENT
             )
-        
+
         # Get status from Stripe
         stripe_status = stripe_service.get_payment_intent_status(payment.stripe_payment_intent_id)
-        
+
         return {
             "payment_id": payment_id,
             "status": stripe_status
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"{ErrorMessages.FAILED_TO_GET_PAYMENT_STATUS}: {str(e)}"
         )
 
@@ -225,10 +225,10 @@ async def get_payment_status(
     }
 )
 async def list_payments(
-    customer_id: Optional[str] = Query(None, description="Customer ID to filter payments"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE, description="Items per page"),
-    payment_service: PaymentService = Depends(get_payment_service)
+        customer_id: Optional[str] = Query(None, description="Customer ID to filter payments"),
+        page: int = Query(1, ge=1, description="Page number"),
+        per_page: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE, description="Items per page"),
+        payment_service: PaymentService = Depends(get_payment_service)
 ) -> PaymentListResponse:
     """
     List payments with pagination.
@@ -254,23 +254,22 @@ async def list_payments(
             page=page,
             per_page=per_page
         )
-        
+
         # Calculate total (in real app, this would come from database)
         total = len(payment_service._payments)
-        
+
         return PaymentListResponse(
             payments=payments,
             total=total,
             page=page,
             per_page=per_page
         )
-        
+
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"{ErrorMessages.FAILED_TO_LIST_PAYMENTS}: {str(e)}"
         )
-
 
 # Commented out webhook endpoint - working without webhooks
 # @router.post("/webhook")

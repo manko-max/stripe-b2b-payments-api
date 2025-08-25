@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.models.subscription import (
-    SubscriptionCreateRequest, 
+    SubscriptionCreateRequest,
     SubscriptionListResponse
 )
 from app.dependencies import get_subscription_service
@@ -26,8 +26,8 @@ router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
     }
 )
 async def create_subscription(
-    request: SubscriptionCreateRequest,
-    subscription_service: SubscriptionService = Depends(get_subscription_service)
+        request: SubscriptionCreateRequest,
+        subscription_service: SubscriptionService = Depends(get_subscription_service)
 ) -> dict:
     """
     Create a new subscription.
@@ -47,15 +47,15 @@ async def create_subscription(
     """
     try:
         subscription = subscription_service.create_subscription(request)
-        
+
         return {
             "message": SuccessMessages.SUBSCRIPTION_CREATED,
             "subscription": subscription
         }
-        
+
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"{ErrorMessages.FAILED_TO_CREATE_SUBSCRIPTION}: {str(e)}"
         )
 
@@ -72,10 +72,10 @@ async def get_subscription(subscription_id: str):
         Subscription details
     """
     subscription = subscription_service.get_subscription(subscription_id)
-    
+
     if not subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
-    
+
     return subscription
 
 
@@ -92,15 +92,15 @@ async def cancel_subscription(subscription_id: str):
     """
     try:
         subscription = subscription_service.cancel_subscription(subscription_id)
-        
+
         if not subscription:
             raise HTTPException(status_code=404, detail="Subscription not found")
-        
+
         return {
             "message": "Subscription cancelled successfully",
             "subscription": subscription
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -118,10 +118,10 @@ async def cancel_subscription(subscription_id: str):
     }
 )
 async def list_subscriptions(
-    customer_id: Optional[str] = Query(None, description="Customer ID to filter subscriptions"),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE, description="Items per page"),
-    subscription_service: SubscriptionService = Depends(get_subscription_service)
+        customer_id: Optional[str] = Query(None, description="Customer ID to filter subscriptions"),
+        page: int = Query(1, ge=1, description="Page number"),
+        per_page: int = Query(DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE, description="Items per page"),
+        subscription_service: SubscriptionService = Depends(get_subscription_service)
 ) -> SubscriptionListResponse:
     """
     List subscriptions with pagination.
@@ -147,19 +147,19 @@ async def list_subscriptions(
             page=page,
             per_page=per_page
         )
-        
+
         # Calculate total (in real app, this would come from database)
         total = len(subscription_service._subscriptions)
-        
+
         return SubscriptionListResponse(
             subscriptions=subscriptions,
             total=total,
             page=page,
             per_page=per_page
         )
-        
+
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"{ErrorMessages.FAILED_TO_LIST_SUBSCRIPTIONS}: {str(e)}"
         )
