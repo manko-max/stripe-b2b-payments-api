@@ -61,7 +61,10 @@ async def create_subscription(
 
 
 @router.get("/{subscription_id}")
-async def get_subscription(subscription_id: str):
+async def get_subscription(
+        subscription_id: str,
+        subscription_service: SubscriptionService = Depends(get_subscription_service)
+):
     """
     Get subscription details by ID.
     
@@ -80,7 +83,10 @@ async def get_subscription(subscription_id: str):
 
 
 @router.post("/{subscription_id}/cancel")
-async def cancel_subscription(subscription_id: str):
+async def cancel_subscription(
+        subscription_id: str,
+        subscription_service: SubscriptionService = Depends(get_subscription_service)
+):
     """
     Cancel a subscription.
     

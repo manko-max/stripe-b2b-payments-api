@@ -537,6 +537,9 @@
                         <p><strong>Customer ID:</strong> ${subscription.customer_id}</p>
                         <p><strong>Period:</strong> ${new Date(subscription.current_period_start).toLocaleDateString()} - ${new Date(subscription.current_period_end).toLocaleDateString()}</p>
                         <p><strong>Created:</strong> ${new Date(subscription.created_at).toLocaleString()}</p>
+                        <p><strong>Actions:</strong> 
+                            <button onclick="cancelSubscription('${subscription.id}')" style="margin-top: 8px; padding: 6px 12px; font-size: 12px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel Subscription</button>
+                        </p>
                     </div>
                 `).join('');
             } else {
@@ -557,6 +560,39 @@
             });
             
             showResult('refundResult', result.data, result.success ? 'success' : 'error');
+        }
+
+        async function cancelSubscription(subscriptionId) {
+            if (!subscriptionId) return;
+            const confirmCancel = confirm('Are you sure you want to cancel this subscription?');
+            if (!confirmCancel) return;
+            
+            const result = await makeRequest(`${API_BASE}/subscriptions/${subscriptionId}/cancel`, {
+                method: 'POST'
+            });
+            
+            if (result.success) {
+                // Refresh subscriptions list
+                await listSubscriptions();
+                // Notify
+                const notification = document.createElement('div');
+                notification.textContent = 'Subscription cancelled successfully';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #28a745;
+                    color: white;
+                    padding: 10px 15px;
+                    border-radius: 5px;
+                    z-index: 1000;
+                    font-size: 14px;
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 2500);
+            } else {
+                alert('Failed to cancel subscription: ' + (result.data?.detail || 'Unknown error'));
+            }
         }
         
         // Auto-load data on page load
